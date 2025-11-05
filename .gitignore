@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Virtual environment
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Data and build artifacts
+data/
+chroma_db/
+data/*.db
+*.sqlite
+*.log
+
+# Streamlit
+.streamlit/
+
+# Env files
+.env
+.env.local

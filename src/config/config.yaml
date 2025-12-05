@@ -1,0 +1,13 @@
+embedding:
+  batch_size: 32
+  normalize_embeddings: true
+  default_model: "sentence-transformers/all-MiniLM-L6-v2"
+  candidate_models:
+    - "sentence-transformers/all-MiniLM-L6-v2"
+    - "mixedbread-ai/mxbai-embed-large-v1"
+    - "thenlper/gte-large"
+
+paths:
+  seed_csv_path: data/places_seed.csv
+  duckdb_path: data/moodtrip.duckdb
+  lancedb_path: data/vector_store

@@ -62,18 +62,12 @@ def build_embeddings(model_name: str | None = None):
     #Connect to lanceDB
     db = connect(str(lancedb_path))
 
-    #Create or open table
-    if "places" not in db.table_names():
-        table = db.create_table("places", records)
-        print("Created LanceDB table 'places'")
+    #Connect to lanceDB and overwrite/create table
+    db = connect(str(lancedb_path))
+    table = db.create_table("places", data=records, mode="overwrite")
+    print("Created/overwritten LanceDB table 'places'")
 
-    else:
-        table = db.open_table("places")
-        table.upsert(records)
-        print("Updated LanceDB table 'places'")
-        
     print(f"Embeddings stored successfully in lanceDB")
-
 
 if __name__ == "__main__":
     build_embeddings()

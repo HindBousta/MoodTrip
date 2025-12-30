@@ -7,6 +7,9 @@ embedding:
     - "mixedbread-ai/mxbai-embed-large-v1"
     - "thenlper/gte-large"
 
+interpreter:
+  default_model: "google/flan-t5-small"
+
 paths:
   seed_csv_path: data/places_seed.csv
   duckdb_path: data/moodtrip.duckdb

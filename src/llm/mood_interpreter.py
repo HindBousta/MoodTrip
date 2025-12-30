@@ -1,5 +1,6 @@
 from typing import List, Dict, Literal, Optional
 from src.llm.local_llm_client import LocalLLM
+import sys
 import re
 import json
 
@@ -9,7 +10,10 @@ class MoodInterpreter:
     Supports rule-based and LLM-based interpretation
     """
 
-    def __init__(self, method: Literal["rule_based", "llm_based"] ="llm_based", llm_model: Optional[str] =None):
+    def __init__(self, 
+        method: Literal["rule_based", "llm_based"] ="llm_based",
+        llm_model: Optional[str] = None,
+    ):
         self.method = method
         self.llm_model = llm_model
     
@@ -92,7 +96,11 @@ class MoodInterpreter:
     def _llm_based(self, user_input: str) -> Dict:
         """
         LLM-based mood interpretation"""
-        llm = LocalLLM(model_name=self.llm_model)
+        if self.llm_model is None:
+            llm = LocalLLM()  # use default model
+        else:
+            llm = LocalLLM(model_name=self.llm_model)
+
         prompt = f"""
         You are a travel mood interpreter.
         Interpret the following user input into structured mood data:
@@ -110,11 +118,13 @@ class MoodInterpreter:
         Return **only JSON**.
 
         """
+        print(prompt)
         response = llm.generate(prompt)
-        return json.loads(response)
+        return response
     
 if __name__ == "__main__":
-    interpreter = MoodInterpreter(method="llm_based")
+    method = sys.argv[1] if len(sys.argv) > 1 else "llm_based"
+    interpreter = MoodInterpreter(method=method)
     user_input = "I want a calm, relaxing place with nature nearby"
     mood_json = interpreter.interpret(user_input)
     print(mood_json)

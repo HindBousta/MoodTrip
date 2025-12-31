@@ -118,7 +118,6 @@ class MoodInterpreter:
         Return **only JSON**.
 
         """
-        print(prompt)
         response = llm.generate(prompt)
         return response
     

@@ -20,8 +20,10 @@ class LocalLLM:
             trust_remote_code=True
         )
 
-    def generate(self, prompt: str, max_new_tokens: int = 300) -> str:
+    def generate(self, prompt: str, max_new_tokens: int = 120) -> str:
         
+        print("Loaded LLM model:", self.model_name)
+
         print("Encoding prompt...")
         inputs = self.tokenizer(prompt, return_tensors="pt")
         inputs = {key: val.to(self.model.device) for key, val in inputs.items()}
@@ -32,16 +34,16 @@ class LocalLLM:
                 **inputs,
                 max_new_tokens=max_new_tokens,
                 do_sample=False,
-                temperature=0.0
+                temperature=0.1,
+                top_p=0.1,           # Extreme determinism
+                repetition_penalty=1.1,
+                pad_token_id=self.tokenizer.eos_token_id
             )
+
         
         print("Decoding output...")
         text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        print(text)
-        print("Done")
-        
-        #Remove prompt prefix
-        if text.startswith(prompt):
-            text = text[len(prompt):]
 
-        return text.strip()
+        print("Done")
+    
+        return text[len(prompt):].strip()

@@ -1,5 +1,8 @@
 from typing import List, Dict, Literal, Optional
+from urllib import response
 from src.llm.local_llm_client import LocalLLM
+from src.utils.json_utils import extract_first_json
+from src.llm.prompts.mood_prompt import MOOD_INTERPRETER_PROMPT
 import sys
 import re
 import json
@@ -100,27 +103,29 @@ class MoodInterpreter:
             llm = LocalLLM()  # use default model
         else:
             llm = LocalLLM(model_name=self.llm_model)
+        
+        prompt = MOOD_INTERPRETER_PROMPT % user_input
 
-        prompt = f"""
-        You are a travel mood interpreter.
-        Interpret the following user input into structured mood data:
-        User Input: {user_input}
+        fallback = {
+            "mood": "general",
+            "desired_tags": [],
+            "intensity": "medium",
+            "climate": "any",
+            "distance_preference": "medium",
+            "extra_constraints": {}
+        }
+        response = llm.generate(prompt) 
 
-        Return a JSON object with the following structure:
-        {{
-            "mood":  short label (restorative, adventurous, romantic, cultural, general),
-            "desired_tags": [List of relevant tags as strings],
-            "intensity": "low|medium|high",
-            "climate": "warm|cold|any",
-            "distance_preference": "short|medium|long",
-            "extra_constraints": any additional constraints as a dictionary
-        }}
-        Return **only JSON**.
+        # Extract only LLM generation (after prompt)
+        prompt_length = len(prompt)
+        llm_output = response.strip()
+        
+        parsed = extract_first_json(llm_output)
+        if parsed is not None:
+            return parsed
 
-        """
-        response = llm.generate(prompt)
-        return response
-    
+        return fallback
+
 if __name__ == "__main__":
     method = sys.argv[1] if len(sys.argv) > 1 else "llm_based"
     interpreter = MoodInterpreter(method=method)

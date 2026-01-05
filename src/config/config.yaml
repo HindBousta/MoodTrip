@@ -8,7 +8,7 @@ embedding:
     - "thenlper/gte-large"
 
 interpreter:
-  default_model: "Qwen/Qwen2.5-3B-Instruct"
+  default_model: "Qwen/Qwen2.5-0.5B-Instruct"
 
 paths:
   seed_csv_path: data/places_seed.csv

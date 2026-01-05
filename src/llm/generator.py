@@ -1,10 +1,18 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
+import json
 from src.llm.local_llm_client import LocalLLM
+from src.utils.json_utils import extract_first_json
+from src.utils.text_utils import parse_tags
+from src.utils.config_loader import load_config
+
+# Load configuration
+config = load_config()
+DEFAULT_LLM_MODEL = config["interpreter"]["default_model"]
 
 def generate_personalized_recommendations(
     mood_json: Dict,
     places: List[Dict],
-    llm_model: Optional[str] = None
+    llm_model: str = DEFAULT_LLM_MODEL
 ) -> List[Dict]:
 
     """
@@ -18,43 +26,50 @@ def generate_personalized_recommendations(
     Returns: 
         List[Dict]: Each dict contains 'place_name', 'summary', 'micro_itinerary'
     """
-    llm_model = LocalLLM(model_name=llm_model)
+    llm = LocalLLM(model_name=llm_model)
     recommendations = []
 
     for place in places:
-        prompt = f"""
-        You are a travel assistant.
-        Given the user mood data: {mood_json},
-        create a short engaging 2-3 sentence description of this place,
-        and a micro-itinerary and suggestion of a complete trip plan if possible.
 
-        Place details:
-        Name: {place.get('name')}
-        Description: {place.get('description')}
-        Tags: {place.get('tags')}
-        Country: {place.get('country')}
+        tags = parse_tags(place.get('tags', ''))
+        
+        prompt = f"""Create personalized travel recommendation for mood: {mood_json['mood']} with tags {mood_json['desired_tags']}
 
-        Return only JSON with the structure: 
+        Place: {place.get('name')}
+        {mood_json['mood'].title()} vibe with {', '.join(tags[:3])} tags
+
+        Return ONLY valid JSON:
         {{
-            "place_name": string,
-            "summary": string,
-            "micro_itinerary": string
-            "suggested_plan": string
+        "place_name": "{place.get('name')}",
+        "summary": "2-3 sentences about why this matches the mood",
+        "micro_itinerary": "1 day plan: Morning->Afternoon->Evening",
+        "suggested_plan": "How to get there + best time to visit"
         }}
-        """
+
+        JSON:"""
+
+        fallback ={
+                "place_name": place.get('name'),
+                "summary": place.get('description') or  f"{mood_json['mood'].title()} destination",
+                "micro_itinerary": "",
+                "suggested_plan": ""
+        }
+
         try:
-            llm_output = llm.generate(prompt)
+            response = llm.generate(prompt)
+            # Extract only LLM generation (after prompt)
+            llm_output = response.strip()
+
             #Parse as json:
-            recommendation = json.loads(llm_output)
-            recommendations.append(recommendation)
+            parsed = extract_first_json(llm_output)
+            if parsed is not None:
+                recommendations.append(parsed)
+            else: 
+                recommendations.append(fallback)
 
         except Exception as e:
             print(f"Failed to generate for {place.get('name')}: {e}")
             #Add minimal info:
-            recommendations.append({
-                "place_name": place.get('name'),
-                "summary": place.get('description'),
-                "micro_itinerary": []
-            })
+            recommendations.append(fallback)
     
     return recommendations

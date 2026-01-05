@@ -1,5 +1,6 @@
 from lancedb import connect
 from sentence_transformers import SentenceTransformer
+from src.utils.text_utils import parse_tags
 import pandas as pd
 
 from src.utils.config_loader import load_config
@@ -40,14 +41,19 @@ def retrieve_places(query: str, top_k: int = 5, model_name: str = "all-MiniLM-L6
 
     # Perform similarity search
     results = (
-        table.search(qvec).metric("cosine").limit(top_k).to_pandas()
+        table.search(qvec)
+        .metric("cosine")
+        .limit(top_k)
+        .to_pandas()
     )
+    # Parse tags from string representation to list
+    results["tags"] = results["tags"].apply(parse_tags)
+
+    # Drop the vector column to avoid sending large arrays to generator
+    if "vector" in results.columns:
+        results = results.drop(columns=["vector"])
 
     # Add similarity score (higher = more similar)
     results = results.rename(columns={"score": "similarity"})
-    #Sort results by similarity
-    #results.sort_values("similarity", ascending=False)
-    #Hide vectors from results
-    #results = results.drop(columns=["vector"])
 
     return results

@@ -1,4 +1,5 @@
-from src.app.generate_trip_suggestions import generate_personalized_recommendations
+from src.app.generate_trip_suggestions import generate_trip_suggestions
+from typing import List, Dict, Optional
 
 def generate_trip_suggestions_api(
         user_input: str,
@@ -16,10 +17,9 @@ def generate_trip_suggestions_api(
     Returns:
         List[Dict]: A list of personalized trip suggestions.
     """
-    recommendations = generate_personalized_recommendations(
+    recommendations = generate_trip_suggestions(
         user_input=user_input,
-        top_k=top_k,
-        llm_model=llm_model
+        top_k=top_k
     )
 
     return {

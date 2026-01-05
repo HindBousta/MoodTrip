@@ -20,20 +20,20 @@ def generate_trip_suggestions(
         List[Dict]: A list of personalized trip suggestions.
     """
     # Step 1: Interpret the user's mood and preferences
-    mood_interpreter = MoodInterpreter(model=llm_model)
+    mood_interpreter = MoodInterpreter(llm_model=llm_model)
     mood_json = mood_interpreter.interpret(user_input)
 
     # Step 2: Retrieve relevant places based on the interpreted mood
     query = " ".join([mood_json.get("mood", ""), *mood_json.get("desired_tags", [])])
-    places_df  = retrieve_places(mood_json, top_k=top_k)
+    places_df = retrieve_places(query, top_k=top_k)
     #Convert DataFrame to list of dicts
     places_list = places_df.to_dict(orient="records")
 
     # Step 3: Generate personalized recommendations
     recommendations = generate_personalized_recommendations(
-        user_input=mood_json,
+        mood_json=mood_json,
         places=places_list,
-        model=llm_model
+        llm_model=llm_model
     )
 
     return recommendations

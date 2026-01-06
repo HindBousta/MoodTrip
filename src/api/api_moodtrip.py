@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional
 from src.api.generate_trip_suggestions_api import generate_trip_suggestions_api
+import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
+import torch
+torch.cuda.empty_cache()  # If using GPU models
 
 app = FastAPI()
 
